@@ -1,0 +1,36 @@
+﻿MenuPanel {
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    > .container {
+        padding: 16px;
+        display: flex;
+        flex-direction: row;
+        column-gap: 32px;
+    }
+
+    .btn {
+        background-color: aliceblue;
+        transition: all 0.1s ease-in;
+        border-radius: 8px;
+        font-family: Roboto;
+        font-size: 32px;
+        padding: 16px;
+        color: darken( aliceblue, 0.5 );
+
+        &:hover {
+            background-color: darken( aliceblue, 0.1 );
+            transform: scale( 1.05 );
+        }
+    }
+
+    &.hidden {
+        background-color: transparent;
+
+        > .container {
+            display: none;
+        }
+    }
+}

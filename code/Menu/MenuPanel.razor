@@ -1,0 +1,90 @@
+﻿@using System;
+@using Sandbox;
+@using Sandbox.UI;
+@using Sandbox.Menu;
+@using Conna.LobbyNet;
+
+@implements IGameMenuPanel
+@attribute [StyleSheet]
+@inherits RootPanel
+@namespace Conna.Blobs
+
+<root class=@GetRootClass()>
+    <div class="container">
+        @if (Game.Menu.Lobby == null || !Game.Menu.Lobby.IsMember)
+        {
+            <button class="btn" onclick=@DoHostGame>HOST GAME</button>
+            <button class="btn" onclick=@DoFindGame>FIND GAME</button>
+        }
+        else
+        {
+            <button class="btn" onclick=@DoDisconnect>DISCONNECT</button>
+        }
+    </div>
+</root>
+
+@code
+{
+    protected override int BuildHash()
+    {
+        return HashCode.Combine(Game.Menu.Lobby, Game.Menu.Lobby?.IsMember ?? false, Network.Initialized);
+    }
+
+    public override void OnButtonEvent( ButtonEvent e )
+    {
+        BlobsGame.OnButtonEvent(e);
+    }
+
+    private async void DoHostGame()
+    {
+        var lobby = await Game.Menu.CreateLobbyAsync(100);
+        lobby.Public = true;
+        Log.Info("Lobby Started Successfully");
+        OnLobbyJoined(lobby);
+    }
+
+    private async void DoFindGame()
+    {
+        var lobbies = await Game.Menu.QueryLobbiesAsync();
+        foreach ( var lobby in lobbies )
+        {
+            if ( lobby.MemberCount < lobby.MaxMembers )
+            {
+                Log.Info("Found a potential lobby...");
+                var success = await lobby.JoinAsync();
+                if ( success )
+                {
+                    OnLobbyJoined(lobby);
+                    return;
+                }
+            }
+        }
+        Log.Info("No lobby found");
+    }
+
+    private void DoDisconnect()
+    {
+        Game.Menu.Lobby.Leave();
+        BlobsGame.Quit();
+        Log.Info("Disconnected");
+    }
+
+    private void OnLobbyJoined(ILobby lobby)
+    {
+        if ( lobby.Owner.IsMe )
+        {
+            Log.Info("Hosting a lobby innit"); 
+        }
+        else
+        {
+            Log.Info("Joined a lobby innit");
+        }
+
+        BlobsGame.Start( lobby );
+    }
+
+    private string GetRootClass()
+    {
+        return Network.Initialized ? "hidden" : string.Empty;  
+    }
+}
