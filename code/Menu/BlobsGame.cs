@@ -14,10 +14,17 @@ public partial class BlobsGame
 	private static SceneCamera Camera { get; set; }
 
 	private TimeUntil NextRandomEntity;
+	private LobbyNet.Entity TestEntity;
 
 	internal static void OnButtonEvent( ButtonEvent e )
 	{
 		Log.Info( e.Button + " " + e.Pressed );
+
+		if ( Network.IsHost && e.Button == "a" )
+		{
+			Current.TestEntity.Position -= Vector3.Left * 8f;
+			Current.TestEntity.SomeInteger.SetValue( Current.TestEntity.SomeInteger.Value + 1 );
+		}
 	}
 
 	public static BlobsGame Start( ILobby lobby )
@@ -55,6 +62,12 @@ public partial class BlobsGame
 		Camera.Position = obj.Position + Vector3.Up * 300f;
 		Camera.Rotation = Rotation.LookAt( Vector3.Down );
 
+		if ( Network.IsHost )
+		{
+			TestEntity = EntitySystem.Create<LobbyNet.Entity>();
+			Log.Info( "Made: " + TestEntity + " with id: " + TestEntity.NetworkIdent );
+		}
+
 		EventSystem.Subscribe<TestEvent>( OnTestEvent );
 	}
 
@@ -68,12 +81,6 @@ public partial class BlobsGame
 				var evnt = new TestEvent();
 				evnt.Message = "What's up, dawg " + Game.Random.Int( 1, 10 );
 				EventSystem.Send( evnt );
-
-				var e = EntitySystem.Create<LobbyNet.Entity>();
-
-				e.Position = Vector3.Up * Game.Random.Float( 8f, 100f );
-				e.Rotation = Rotation.LookAt( Vector3.Down );
-				e.Scale = Game.Random.Float( 2f );
 			}
 
 			NextRandomEntity = 10f;
