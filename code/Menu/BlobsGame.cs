@@ -18,13 +18,7 @@ public partial class BlobsGame
 
 	internal static void OnButtonEvent( ButtonEvent e )
 	{
-		Log.Info( e.Button + " " + e.Pressed );
-
-		if ( Network.IsHost && e.Button == "a" )
-		{
-			Current.TestEntity.Position -= Vector3.Left * 8f;
-			Current.TestEntity.SomeInteger.SetValue( Current.TestEntity.SomeInteger.Value + 1 );
-		}
+		InputSystem.OnButtonEvent( e );
 	}
 
 	public static BlobsGame Start( ILobby lobby )
@@ -65,6 +59,7 @@ public partial class BlobsGame
 		if ( Network.IsHost )
 		{
 			TestEntity = EntitySystem.Create<LobbyNet.Entity>();
+			TestEntity.GiveControl( Network.Host );
 			Log.Info( "Made: " + TestEntity + " with id: " + TestEntity.NetworkIdent );
 		}
 

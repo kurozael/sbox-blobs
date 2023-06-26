@@ -35,6 +35,12 @@
         BlobsGame.OnButtonEvent(e);
     }
 
+    public override void Tick()
+    {
+        Network.Tick();
+        base.Tick();
+    }
+
     private async void DoHostGame()
     {
         var lobby = await Game.Menu.CreateLobbyAsync(100);
