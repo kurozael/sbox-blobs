@@ -6,39 +6,36 @@ using Sandbox.UI;
 
 namespace Conna.Blobs;
 
-public partial class BlobsGame
+public static class BlobsGame
 {
-	public static BlobsGame Current { get; private set; }
-
 	private static SceneWorld World { get; set; }
 	private static SceneCamera Camera { get; set; }
 
-	private TimeUntil NextRandomEntity;
-	private LobbyNet.Entity TestEntity;
+	private static TimeUntil NextRandomEntity;
+	private static LobbyNet.Entity TestEntity;
+	private static bool IsRunning { get; set; }
 
 	internal static void OnButtonEvent( ButtonEvent e )
 	{
 		InputSystem.OnButtonEvent( e );
 	}
 
-	public static BlobsGame Start( ILobby lobby )
+	public static void Start( ILobby lobby )
 	{
 		Quit();
-		Current = new BlobsGame();
-		Current.OnStart( lobby );
+		OnStart( lobby );
 		Log.Info( "BlobsGame Started" );
-		return Current;
+		IsRunning = true;
 	}
 
 	public static void Quit()
 	{
-		if ( Current == null ) return;
+		if ( !IsRunning ) return;
 		Log.Info( "BlobsGame Quit" );
-		Current.OnQuit();
-		Current = null;
+		OnQuit();
 	}
 
-	private void OnStart( ILobby lobby )
+	private static void OnStart( ILobby lobby )
 	{
 		Network.Initialize( lobby );
 		Network.OnTick += OnNetworkTick;
@@ -66,7 +63,16 @@ public partial class BlobsGame
 		EventSystem.Subscribe<TestEvent>( OnTestEvent );
 	}
 
-	private void OnNetworkTick()
+	private static void OnQuit()
+	{
+		World?.Delete();
+		Camera = null;
+
+		Network.Disconnect();
+		Network.OnTick -= OnNetworkTick;
+	}
+
+	private static void OnNetworkTick()
 	{
 		if ( NextRandomEntity )
 		{
@@ -82,16 +88,8 @@ public partial class BlobsGame
 		}
 	}
 
-	private void OnTestEvent( TestEvent evnt )
+	private static void OnTestEvent( TestEvent evnt )
 	{
 		Log.Info( "We got: " + evnt.Message + " from " + evnt.Sender.Name );
-	}
-
-	private void OnQuit()
-	{
-		World?.Delete();
-		Camera = null;
-
-		Network.Disconnect();
 	}
 }
