@@ -8,11 +8,8 @@ namespace Conna.Blobs;
 
 public static class BlobsGame
 {
-	private static SceneWorld World { get; set; }
-	private static SceneCamera Camera { get; set; }
+	public static SceneWorld World { get; private set; }
 
-	private static TimeUntil NextRandomEntity;
-	private static LobbyNet.Entity TestEntity;
 	private static bool IsRunning { get; set; }
 
 	internal static void OnButtonEvent( ButtonEvent e )
@@ -37,36 +34,30 @@ public static class BlobsGame
 
 	private static void OnStart( ILobby lobby )
 	{
+		World = new SceneWorld();
+
 		Network.Initialize( lobby );
 		Network.OnTick += OnNetworkTick;
-
-		World = new SceneWorld();
-		World.AmbientLightColor = Color.White;
-
-		Camera = new SceneCamera();
-		Camera.World = World;
-
-		var obj = new SceneModel( World, "models/sbox_props/aircon_unit_large/aircon_unit_large_128x64_a.vmdl", new Transform() );
-		obj.Position = Vector3.Zero;
-
-		Camera.AmbientLightColor = Color.White;
-		Camera.Position = obj.Position + Vector3.Up * 300f;
-		Camera.Rotation = Rotation.LookAt( Vector3.Down );
+		Network.OnPlayerConnect += OnPlayerConnect;
 
 		if ( Network.IsHost )
 		{
-			TestEntity = EntitySystem.Create<LobbyNet.Entity>();
-			TestEntity.GiveControl( Network.Host );
-			Log.Info( "Made: " + TestEntity + " with id: " + TestEntity.NetworkIdent );
+			var entity = EntitySystem.Create<ModelEntity>();
+			entity.ModelName.Value = "models/citizen_props/crate01.vmdl";
+			entity.GiveControl( Network.Host );
 		}
+	}
 
-		EventSystem.Subscribe<TestEvent>( OnTestEvent );
+	private static void OnPlayerConnect( LobbyNet.Player player )
+	{
+		var entity = EntitySystem.Create<ModelEntity>();
+		entity.ModelName.Value = "models/citizen_props/crate01.vmdl";
+		entity.GiveControl( player );
 	}
 
 	private static void OnQuit()
 	{
 		World?.Delete();
-		Camera = null;
 
 		Network.Disconnect();
 		Network.OnTick -= OnNetworkTick;
@@ -74,22 +65,6 @@ public static class BlobsGame
 
 	private static void OnNetworkTick()
 	{
-		if ( NextRandomEntity )
-		{
-			if ( Network.IsHost )
-			{
-				Log.Info( "We're the host" );
-				var evnt = new TestEvent();
-				evnt.Message = "What's up, dawg " + Game.Random.Int( 1, 10 );
-				EventSystem.Send( evnt );
-			}
-
-			NextRandomEntity = 10f;
-		}
-	}
-
-	private static void OnTestEvent( TestEvent evnt )
-	{
-		Log.Info( "We got: " + evnt.Message + " from " + evnt.Sender.Name );
+		
 	}
 }
