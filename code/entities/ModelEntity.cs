@@ -6,11 +6,7 @@ namespace Conna.Blobs;
 public class ModelEntity : LobbyNet.Entity
 {
 	public SyncString ModelName { get; set; } = new( string.Empty );
-
-	[LobbyNet.Input] public bool IsLeftPressed { get; set; }
-	[LobbyNet.Input] public bool IsRightPressed { get; set; }
-
-	private SceneModel SceneObject { get; set; }
+	public SceneModel SceneObject { get; private set; }
 
 	public ModelEntity() : base()
 	{
@@ -21,25 +17,6 @@ public class ModelEntity : LobbyNet.Entity
 	{
 		UpdateSceneObject();
 		base.OnSpawn();
-	}
-
-	public override void BuildInput()
-	{
-		IsLeftPressed = InputSystem.IsKeyDown( "a" );
-		IsRightPressed = InputSystem.IsKeyDown( "d" );
-	}
-
-	public override void Simulate( bool isFirstTime )
-	{
-		if ( IsLeftPressed )
-		{
-			Position += Vector3.Left * Network.FixedDeltaTime * 4f;
-		}
-
-		if ( IsRightPressed )
-		{
-			Position += Vector3.Right * Network.FixedDeltaTime * 4f;
-		}
 	}
 
 	public override void OnDestroy()
@@ -55,11 +32,7 @@ public class ModelEntity : LobbyNet.Entity
 		if ( SceneObject.IsValid() )
 		{
 			SceneObject.Transform = Transform;
-
-			// Conna: I don't understand why I have to do this for scale to work.
-			var tx = SceneObject.Transform;
-			tx.Scale = Transform.Scale;
-			SceneObject.Transform = tx;
+			SceneObject.Update( Network.FixedDeltaTime );
 		}
 		
 		base.Tick();
@@ -76,10 +49,11 @@ public class ModelEntity : LobbyNet.Entity
 		}
 
 		Log.Info( "Model Name Changed To: " + ModelName.Value );
+		Log.Info( "We Made The Entity And Add It To: " + BlobsGame.World );
 
 		if ( !SceneObject.IsValid() )
 		{
-			SceneObject = new SceneModel( BlobsGame.World, ModelName.Value, Transform );
+			SceneObject = new SceneModel( BlobsGame.World, ModelName.Value, new Transform( Position, Rotation ) );
 		}
 
 		SceneObject.Model = Model.Load( ModelName.Value );

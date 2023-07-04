@@ -42,16 +42,16 @@ public static class BlobsGame
 
 		if ( Network.IsHost )
 		{
-			var entity = EntitySystem.Create<ModelEntity>();
-			entity.ModelName.Value = "models/citizen_props/crate01.vmdl";
+			var entity = EntitySystem.Create<PlayerEntity>();
+			entity.ModelName.Value = "models/citizen/citizen.vmdl";
 			entity.GiveControl( Network.Host );
 		}
 	}
 
 	private static void OnPlayerConnect( LobbyNet.Player player )
 	{
-		var entity = EntitySystem.Create<ModelEntity>();
-		entity.ModelName.Value = "models/citizen_props/crate01.vmdl";
+		var entity = EntitySystem.Create<PlayerEntity>();
+		entity.ModelName.Value = "models/citizen/citizen.vmdl";
 		entity.GiveControl( player );
 	}
 
