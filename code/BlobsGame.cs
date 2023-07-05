@@ -3,6 +3,7 @@ using Sandbox.Menu;
 using Conna.LobbyNet;
 using System;
 using Sandbox.UI;
+using System.Linq;
 
 namespace Conna.Blobs;
 
@@ -39,12 +40,23 @@ public static class BlobsGame
 		Network.Initialize( lobby );
 		Network.OnTick += OnNetworkTick;
 		Network.OnPlayerConnect += OnPlayerConnect;
+		Network.OnPlayerDisconnect += OnPlayerDisconnect;
 
 		if ( Network.IsHost )
 		{
 			var entity = EntitySystem.Create<PlayerEntity>();
 			entity.ModelName.Value = "models/citizen/citizen.vmdl";
 			entity.GiveControl( Network.Host );
+		}
+	}
+
+	private static void OnPlayerDisconnect( LobbyNet.Player player )
+	{
+		var entities = EntitySystem.All.Where( e => e.IsController( player ) );
+
+		foreach ( var e in entities )
+		{
+			EntitySystem.Destroy( e );
 		}
 	}
 

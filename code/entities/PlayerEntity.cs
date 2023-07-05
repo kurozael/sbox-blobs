@@ -1,6 +1,7 @@
 ﻿using Sandbox;
 using Conna.LobbyNet;
 using System;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Conna.Blobs;
 
@@ -9,7 +10,10 @@ public class PlayerEntity : ModelEntity
 	[LobbyNet.Input] public Vector3 MoveDirection { get; set; }
 	[LobbyNet.Input] public Rotation LookDirection { get; set; }
 	[LobbyNet.Input] public bool IsRunning { get; set; }
+
+	[State] public Vector3 WishVelocity { get; set; }
 	[State] public Vector3 Velocity { get; set; }
+
 	private bool WasHoldingSpace { get; set; }
 
 	public override void BuildInput()
@@ -55,11 +59,12 @@ public class PlayerEntity : ModelEntity
 
 	public override void Simulate( bool isFirstTime )
 	{
-		var moveSpeed = IsRunning ? 70f : 24f;
-		Velocity = Velocity.AddClamped( MoveDirection * moveSpeed, moveSpeed );
+		var moveSpeed = IsRunning ? 150f : 50f;
+		WishVelocity = MoveDirection * moveSpeed;
+		Velocity = Velocity.AddClamped( WishVelocity, moveSpeed );
 		Rotation = LookDirection;
 		Position += Velocity * Network.FixedDeltaTime;
-		Velocity *= 0.9f;
+		Velocity *= 0.8f;
 	}
 
 	public override void Tick()
@@ -75,14 +80,19 @@ public class PlayerEntity : ModelEntity
 		SceneObject.SetAnimParameter( "move_x", forward );
 		SceneObject.SetAnimParameter( "move_z", Velocity.z );
 
+		forward = Rotation.Forward.Dot( WishVelocity );
+		sideward = Rotation.Right.Dot( WishVelocity );
+		angle = MathF.Atan2( sideward, forward ).RadianToDegree().NormalizeDegrees();
+
 		SceneObject.SetAnimParameter( "wish_direction", angle );
-		SceneObject.SetAnimParameter( "wish_speed", Velocity.Length );
-		SceneObject.SetAnimParameter( "wish_groundspeed", Velocity.WithZ( 0 ).Length );
+		SceneObject.SetAnimParameter( "wish_speed", WishVelocity.Length );
+		SceneObject.SetAnimParameter( "wish_groundspeed", WishVelocity.WithZ( 0 ).Length );
 		SceneObject.SetAnimParameter( "wish_y", sideward );
 		SceneObject.SetAnimParameter( "wish_x", forward );
-		SceneObject.SetAnimParameter( "wish_z", Velocity.z );
+		SceneObject.SetAnimParameter( "wish_z", WishVelocity.z );
 
 		SceneObject.SetAnimParameter( "b_grounded", true );
+		SceneObject.SetAnimParameter( "move_style", 0 );
 
 		base.Tick();
 	}
