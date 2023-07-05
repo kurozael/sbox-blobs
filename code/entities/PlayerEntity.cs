@@ -30,7 +30,7 @@ public class PlayerEntity : ModelEntity
 		else if ( InputSystem.IsKeyDown( "s" ) )
 			direction.x = -1f;
 
-		var cameraRay = SceneRenderer.CurrentCamera.GetRay( Mouse.Position );
+		var cameraRay = BlobsGame.Camera.GetRay( Mouse.Position );
 		var plane = new Plane( Vector3.Zero, Vector3.Up );
 		var hitPosition = plane.Trace( cameraRay );
 

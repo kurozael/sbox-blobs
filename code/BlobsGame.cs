@@ -10,6 +10,7 @@ namespace Conna.Blobs;
 public static class BlobsGame
 {
 	public static SceneWorld World { get; private set; }
+	public static SceneCamera Camera { get; internal set; }
 
 	private static bool IsRunning { get; set; }
 
@@ -77,6 +78,14 @@ public static class BlobsGame
 
 	private static void OnNetworkTick()
 	{
-		
+		if ( Network.LocalPlayer.IsValid() )
+		{
+			var controlledEntity = EntitySystem.All.FirstOrDefault( e => e.IsController( Network.LocalPlayer ) );
+
+			if ( controlledEntity.IsValid() )
+			{
+				Camera.Position = Camera.Position.LerpTo( controlledEntity.Position + Vector3.Up * 500f, Network.FixedDeltaTime * 4f );
+			}
+		}
 	}
 }
