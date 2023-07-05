@@ -8,7 +8,9 @@ public class PlayerEntity : ModelEntity
 {
 	[LobbyNet.Input] public Vector3 MoveDirection { get; set; }
 	[LobbyNet.Input] public Rotation LookDirection { get; set; }
+	[LobbyNet.Input] public bool IsRunning { get; set; }
 	[State] public Vector3 Velocity { get; set; }
+	private bool WasHoldingSpace { get; set; }
 
 	public override void BuildInput()
 	{
@@ -34,12 +36,27 @@ public class PlayerEntity : ModelEntity
 			LookDirection = Rotation.LookAt( aimDirection );
 		}
 
+		if ( WasHoldingSpace && !InputSystem.IsKeyDown( "space" ) )
+		{
+			CallRpc( "MyRpc", true, 1, 0, this );
+		}
+
+		IsRunning = InputSystem.IsKeyDown( "lshift" );
 		MoveDirection = direction;
+		WasHoldingSpace = InputSystem.IsKeyDown( "space" );
+	}
+
+
+	[Rpc( "MyRpc" )]
+	public void RemoteCall( LobbyNet.Player player, bool a, int b, int c, LobbyNet.Entity d )
+	{
+		Log.Info( $"{player.Name} did a remote call {a}, {b}, {c}, {d}" );
 	}
 
 	public override void Simulate( bool isFirstTime )
 	{
-		Velocity = Velocity.AddClamped( MoveDirection * 24f, 24f );
+		var moveSpeed = IsRunning ? 70f : 24f;
+		Velocity = Velocity.AddClamped( MoveDirection * moveSpeed, moveSpeed );
 		Rotation = LookDirection;
 		Position += Velocity * Network.FixedDeltaTime;
 		Velocity *= 0.9f;
