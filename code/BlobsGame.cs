@@ -53,19 +53,25 @@ public static class BlobsGame
 
 	private static void OnPlayerDisconnect( LobbyNet.Player player )
 	{
-		var entities = EntitySystem.All.Where( e => e.IsController( player ) );
-
-		foreach ( var e in entities )
+		if ( Network.IsHost )
 		{
-			EntitySystem.Destroy( e );
+			var entities = EntitySystem.All.Where( e => e.IsController( player ) );
+
+			foreach ( var e in entities )
+			{
+				EntitySystem.Destroy( e );
+			}
 		}
 	}
 
 	private static void OnPlayerConnect( LobbyNet.Player player )
 	{
-		var entity = EntitySystem.Create<PlayerEntity>();
-		entity.ModelName.Value = "models/citizen/citizen.vmdl";
-		entity.GiveControl( player );
+		if ( Network.IsHost )
+		{
+			var entity = EntitySystem.Create<PlayerEntity>();
+			entity.ModelName.Value = "models/citizen/citizen.vmdl";
+			entity.GiveControl( player );
+		}
 	}
 
 	private static void OnQuit()
